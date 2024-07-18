@@ -13,6 +13,15 @@ const field = {
         this.w = window.innerWidth;
         this.h = window.innerHeight;
 
+        if (window.innerWidth < window.innerHeight) {
+            this.w = window.innerHeight;
+            this.h = window.innerWidth;
+            canvasEl.style.transform = 'rotate(90deg)';
+            canvasEl.style.transformOrigin = 'center center';
+        } else {
+            canvasEl.style.transform = 'rotate(0deg)';
+        }
+
         if (window.innerWidth < 768) {
             this.w = window.innerWidth;
             this.h = window.innerWidth * (3 / 4);
@@ -23,7 +32,6 @@ const field = {
         canvasCtx.fillStyle = "#286047";
         canvasCtx.fillRect(0, 0, this.w, this.h);
     },
-
 }
 
 const line = {
@@ -48,6 +56,8 @@ const leftPadle = {
     h: 200,
     _move: function () {
         this.y = mouse.y - this.h / 2;
+        if (this.y < 0) this.y = 0;
+        if (this.y + this.h > field.h) this.y = field.h - this.h;
     },
     draw: function () {
         canvasCtx.fillStyle = "#ffffff";
@@ -65,21 +75,23 @@ const rightPadle = {
     speed: 5,
     _move: function () {
         if (this.y + this.h / 2 < ball.y + ball.r) {
-            this.y += this.speed
+            this.y += this.speed;
         } else {
-            this.y -= this.speed
+            this.y -= this.speed;
         }
+        if (this.y < 0) this.y = 0;
+        if (this.y + this.h > field.h) this.y = field.h - this.h;
     },
 
     speedUp: function () {
-        this.speed += 1
+        this.speed += 1;
     },
 
     draw: function () {
         canvasCtx.fillStyle = "#ffffff";
         canvasCtx.fillRect(this.x, this.y, this.w, this.h);
 
-        this._move()
+        this._move();
     },
 }
 
@@ -87,10 +99,10 @@ const score = {
     human: 0,
     computer: 0,
     increaseHuman: function () {
-        this.human++
+        this.human++;
     },
     increaseComputer: function () {
-        this.computer++
+        this.computer++;
     },
     draw: function () {
         canvasCtx.font = "bold 72px Arial";
@@ -103,8 +115,8 @@ const score = {
 }
 
 const ball = {
-    x: this.x = field.w / 2,
-    y: this.y = field.w / 2,
+    x: field.w / 2,
+    y: field.h / 2,
     r: 20,
     speed: 5,
     directionX: 1,
@@ -120,7 +132,7 @@ const ball = {
                 this._speedUp();
             } else {
                 score.increaseHuman();
-                this._pointUp()
+                this._pointUp();
             }
         }
 
@@ -132,8 +144,8 @@ const ball = {
                 this._reversex();
                 this._speedUp();
             } else {
-                score.increaseComputer()
-                this._pointUp()
+                score.increaseComputer();
+                this._pointUp();
             }
         }
 
@@ -146,7 +158,7 @@ const ball = {
     },
 
     _speedUp: function () {
-        this.speed += 0.5
+        this.speed += 0.5;
     },
 
     _reversex: function () {
@@ -158,10 +170,10 @@ const ball = {
 
     _pointUp: function () {
         rightPadle.speedUp();
-        this.speed = 5
+        this.speed = 5;
 
-        this.x = field.w / 2
-        this.y = field.h / 2
+        this.x = field.w / 2;
+        this.y = field.h / 2;
     },
 
     _move: function () {
@@ -174,7 +186,7 @@ const ball = {
         canvasCtx.arc(this.x, this.y, this.r, 0, 2 * Math.PI, false);
         canvasCtx.fill();
 
-        this._calcPosition()
+        this._calcPosition();
         this._move();
     },
 }
@@ -185,9 +197,7 @@ function setup() {
     canvasEl.height = field.h;
 }
 
-
 function draw() {
-
     field.draw();
 
     line.draw();
@@ -201,8 +211,8 @@ function draw() {
     score.draw();
 }
 
-setup()
-draw()
+setup();
+draw();
 
 window.animateFrame = (function () {
     return (
@@ -215,7 +225,7 @@ window.animateFrame = (function () {
         function (callback) {
             return window.setTimeout(callback, 1000 / 60);
         }
-    )
+    );
 })();
 
 let isPlaying = false;
@@ -227,11 +237,27 @@ function main() {
     }
 }
 
-
 canvasEl.addEventListener('mousemove', function (e) {
     mouse.x = e.pageX;
     mouse.y = e.pageY;
 });
+
+canvasEl.addEventListener('touchstart', function (e) {
+    mouse.x = e.touches[0].pageX;
+    mouse.y = e.touches[0].pageY;
+});
+
+canvasEl.addEventListener('touchmove', function (e) {
+    mouse.x = e.touches[0].pageX;
+    mouse.y = e.touches[0].pageY;
+    e.preventDefault();
+});
+
+canvasEl.addEventListener('touchend', function () {
+    mouse.x = 0;
+    mouse.y = 0;
+})
+
 
 window.addEventListener('resize', function () {
     setup();
@@ -249,4 +275,11 @@ document.getElementById("playButton").addEventListener('click', function () {
 
 document.getElementById("pauseButton").addEventListener('click', function () {
     isPlaying = false;
-})
+});
+
+
+if (window.screen.orientation) {
+    window.screen.orientation.lock('landscape').catch(function (error) {
+        console.log(error);
+    });
+}
